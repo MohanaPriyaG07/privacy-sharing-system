@@ -1,0 +1,6 @@
+id,name,email,phone,age,gender,salary,city,aadhaar
+1,Rahul Sharma,rahul.sharma@gmail.com,9876543210,28,Male,80000,Chennai,1234-5678-9012
+2,Priya Nair,priya.nair@yahoo.com,9123456780,32,Female,95000,Bangalore,2345-6789-0123
+3,Arjun Patel,arjun.patel@outlook.com,9988776655,26,Male,72000,Mumbai,3456-7890-1234
+4,Neha Verma,neha.verma@gmail.com,9871234567,29,Female,88000,Delhi,4567-8901-2345
+5,Karan Mehta,karan.mehta@gmail.com,9012345678,35,Male,120000,Pune,5678-9012-3456
