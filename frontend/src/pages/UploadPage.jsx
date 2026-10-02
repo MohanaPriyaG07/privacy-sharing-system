@@ -1,44 +1,46 @@
 import { useState } from 'react';
 import axios from 'axios';
+import Spinner from '../components/Spinner';
+import { useToast } from '../components/Toast';
 
 const API = 'http://localhost:5000/api';
 const token = () => localStorage.getItem('token');
 
 const PRIVACY_LEVELS = [
-  { id: 'low',    label: 'Low',    desc: 'Mask names & emails',        color: '#4CAF50' },
+  { id: 'low',    label: 'Low',    desc: 'Mask names & emails',       color: '#4CAF50' },
   { id: 'medium', label: 'Medium', desc: 'Pseudonymize + generalize',  color: '#FF9800' },
   { id: 'high',   label: 'High',   desc: 'Full encryption',            color: '#F44336' },
 ];
 
 const STEPS = ['Upload', 'Detect PII', 'Choose Level', 'Anonymize', 'Share'];
 
-const btnStyle = (bg) => ({
+const btnStyle = (bg, disabled = false) => ({
   padding: '10px 24px',
-  background: bg,
+  background: disabled ? '#ccc' : bg,
   color: '#fff',
   border: 'none',
   borderRadius: 8,
-  cursor: 'pointer',
+  cursor: disabled ? 'not-allowed' : 'pointer',
   fontSize: 15,
   userSelect: 'none',
   marginTop: 12
 });
 
 export default function UploadPage() {
-  const [step, setStep]             = useState(1);
-  const [file, setFile]             = useState(null);
-  const [datasetId, setDatasetId]   = useState(null);
-  const [analysis, setAnalysis]     = useState(null);
+  const [step, setStep]               = useState(1);
+  const [file, setFile]               = useState(null);
+  const [datasetId, setDatasetId]     = useState(null);
+  const [analysis, setAnalysis]       = useState(null);
   const [privacyLevel, setPrivacyLevel] = useState(null);
-  const [shareUrl, setShareUrl]     = useState('');
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
+  const [shareUrl, setShareUrl]       = useState('');
+  const [loading, setLoading]         = useState(false);
+  const [loadingText, setLoadingText] = useState('');
+  const { showToast, ToastContainer } = useToast();
 
-  // STEP 1 - Upload file
   const handleUpload = async () => {
-    if (!file) { setError('Please select a file!'); return; }
+    if (!file) { showToast('Please select a file first!', 'warning'); return; }
     setLoading(true);
-    setError('');
+    setLoadingText('Uploading your file...');
     try {
       const form = new FormData();
       form.append('file', file);
@@ -49,52 +51,58 @@ export default function UploadPage() {
         }
       });
       setDatasetId(data.datasetId);
+      showToast(`File uploaded! ${data.rowCount} rows detected.`, 'success');
       setStep(2);
     } catch (err) {
-      setError(err.response?.data?.error || 'Upload failed');
+      showToast(err.response?.data?.error || 'Upload failed', 'error');
     }
     setLoading(false);
+    setLoadingText('');
   };
 
-  // STEP 2 - Detect PII
   const handleAnalyze = async () => {
     setLoading(true);
-    setError('');
+    setLoadingText('Scanning for sensitive data...');
     try {
       const { data } = await axios.post(
         `${API}/datasets/${datasetId}/analyze`, {},
         { headers: { Authorization: `Bearer ${token()}` } }
       );
       setAnalysis(data);
+      showToast(
+        `Found ${data.piiFields.length} sensitive fields. Risk score: ${data.riskScore}/100`,
+        data.riskScore > 60 ? 'warning' : 'info'
+      );
       setStep(3);
     } catch (err) {
-      setError(err.response?.data?.error || 'Analysis failed');
+      showToast(err.response?.data?.error || 'Analysis failed', 'error');
     }
     setLoading(false);
+    setLoadingText('');
   };
 
-  // STEP 3+4 - Apply privacy
   const handleProcess = async (level) => {
     setPrivacyLevel(level);
     setLoading(true);
-    setError('');
+    setLoadingText(`Applying ${level} privacy protection...`);
     try {
       await axios.post(
         `${API}/datasets/${datasetId}/process`,
         { privacyLevel: level },
         { headers: { Authorization: `Bearer ${token()}` } }
       );
+      showToast('Dataset anonymized successfully!', 'success');
       setStep(5);
     } catch (err) {
-      setError(err.response?.data?.error || 'Processing failed');
+      showToast(err.response?.data?.error || 'Processing failed', 'error');
     }
     setLoading(false);
+    setLoadingText('');
   };
 
-  // STEP 5 - Share
   const handleShare = async () => {
     setLoading(true);
-    setError('');
+    setLoadingText('Generating secure link...');
     try {
       const { data } = await axios.post(
         `${API}/sharing/${datasetId}/share`,
@@ -102,14 +110,22 @@ export default function UploadPage() {
         { headers: { Authorization: `Bearer ${token()}` } }
       );
       setShareUrl(data.shareUrl);
+      showToast('Secure share link generated!', 'success');
     } catch (err) {
-      setError(err.response?.data?.error || 'Sharing failed');
+      showToast(err.response?.data?.error || 'Sharing failed', 'error');
     }
     setLoading(false);
+    setLoadingText('');
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    showToast('Link copied to clipboard!', 'info');
   };
 
   return (
     <div style={{ maxWidth: 600, margin: '2rem auto', padding: '0 1rem' }}>
+      <ToastContainer />
       <h2>Upload Dataset</h2>
 
       {/* Step indicators */}
@@ -126,21 +142,20 @@ export default function UploadPage() {
         ))}
       </div>
 
-      {/* Error message */}
-      {error && (
-        <p style={{
-          color: 'red',
-          background: '#ffebee',
-          padding: '10px 16px',
-          borderRadius: 8,
+      {/* Loading spinner overlay */}
+      {loading && (
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e0e0e0',
+          borderRadius: 12,
           marginBottom: 16
         }}>
-          ⚠️ {error}
-        </p>
+          <Spinner size={40} text={loadingText} />
+        </div>
       )}
 
-      {/* STEP 1 - Upload */}
-      {step === 1 && (
+      {/* Step 1 - Upload */}
+      {step === 1 && !loading && (
         <div style={{
           border: '2px dashed #90caf9',
           borderRadius: 12,
@@ -148,9 +163,7 @@ export default function UploadPage() {
           textAlign: 'center',
           background: '#fafafa'
         }}>
-          <p style={{ fontSize: 18, marginBottom: 16 }}>
-            Select your CSV file
-          </p>
+          <p style={{ fontSize: 18, marginBottom: 16 }}>Select your CSV file</p>
           <input
             type="file"
             accept=".csv"
@@ -158,73 +171,86 @@ export default function UploadPage() {
             style={{ marginBottom: 16, cursor: 'pointer' }}
           />
           {file && (
-            <p style={{ color: '#1976D2', marginBottom: 8 }}>
-              📄 {file.name}
-            </p>
+            <p style={{ color: '#1976D2', marginBottom: 8 }}>📄 {file.name}</p>
           )}
           <br />
-          <button
-            onClick={handleUpload}
-            disabled={loading}
-            style={btnStyle('#1976D2')}
-          >
-            {loading ? 'Uploading...' : 'Upload File'}
+          <button onClick={handleUpload} style={btnStyle('#1976D2')}>
+            Upload File
           </button>
         </div>
       )}
 
-      {/* STEP 2 - Detect PII */}
-      {step === 2 && (
-        <div style={{
-          background: '#e8f5e9',
-          padding: 24,
-          borderRadius: 12
-        }}>
+      {/* Step 2 - Detect PII */}
+      {step === 2 && !loading && (
+        <div style={{ background: '#e8f5e9', padding: 24, borderRadius: 12 }}>
           <p style={{ color: 'green', fontWeight: 600, fontSize: 16 }}>
             ✅ File uploaded successfully!
           </p>
           <p>Click below to scan your file for sensitive data.</p>
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            style={btnStyle('#388E3C')}
-          >
-            {loading ? 'Scanning...' : 'Detect Sensitive Data'}
+          <button onClick={handleAnalyze} style={btnStyle('#388E3C')}>
+            Detect Sensitive Data
           </button>
         </div>
       )}
 
-      {/* STEP 3 - PII Results */}
-      {step === 3 && analysis && (
-        <div style={{
-          background: '#fff3e0',
-          padding: 24,
-          borderRadius: 12
-        }}>
-          <h3>🔍 PII Detection Results</h3>
-          <p>
+      {/* Step 3 - PII Results + Privacy Level */}
+      {step === 3 && analysis && !loading && (
+        <div style={{ background: '#fff3e0', padding: 24, borderRadius: 12 }}>
+          <h3>🔍 Detection Results</h3>
+
+          {/* Risk score bar */}
+          <p style={{ marginBottom: 4 }}>
             <strong>Risk Score: </strong>
             <span style={{
-              color: analysis.riskScore > 60 ? 'red' :
-                     analysis.riskScore > 30 ? 'orange' : 'green',
+              color: analysis.riskScore > 60 ? '#f44336' :
+                     analysis.riskScore > 30 ? '#FF9800' : '#4CAF50',
               fontWeight: 700,
               fontSize: 18
             }}>
               {analysis.riskScore}/100
             </span>
           </p>
+          <div style={{
+            height: 10,
+            background: '#e0e0e0',
+            borderRadius: 10,
+            marginBottom: 16,
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${analysis.riskScore}%`,
+              background: analysis.riskScore > 60 ? '#f44336' :
+                          analysis.riskScore > 30 ? '#FF9800' : '#4CAF50',
+              borderRadius: 10,
+              transition: 'width 0.6s ease'
+            }} />
+          </div>
+
           <p>
-            <strong>Sensitive columns found: </strong>
+            <strong>Sensitive columns: </strong>
             {analysis.piiFields.length > 0
-              ? analysis.piiFields.join(', ')
+              ? analysis.piiFields.map(f => (
+                  <span key={f} style={{
+                    display: 'inline-block',
+                    background: '#ffccbc',
+                    color: '#bf360c',
+                    borderRadius: 12,
+                    padding: '2px 10px',
+                    fontSize: 12,
+                    marginRight: 6,
+                    marginBottom: 4
+                  }}>{f}</span>
+                ))
               : 'None detected'}
           </p>
-          <h3 style={{ marginTop: 24 }}>Choose Privacy Level</h3>
+
+          <h3 style={{ marginTop: 20 }}>Choose Privacy Level</h3>
           <div style={{ display: 'flex', gap: 12 }}>
             {PRIVACY_LEVELS.map(lvl => (
               <div
                 key={lvl.id}
-                onClick={() => !loading && handleProcess(lvl.id)}
+                onClick={() => handleProcess(lvl.id)}
                 style={{
                   flex: 1,
                   padding: 16,
@@ -233,54 +259,48 @@ export default function UploadPage() {
                   userSelect: 'none',
                   border: `2px solid ${lvl.color}`,
                   textAlign: 'center',
-                  opacity: loading ? 0.6 : 1
+                  background: '#fff',
+                  transition: 'transform 0.15s, box-shadow 0.15s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = `0 6px 16px ${lvl.color}33`;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
                 <div style={{
-                  fontWeight: 700,
-                  color: lvl.color,
-                  fontSize: 16,
-                  pointerEvents: 'none'
+                  fontWeight: 700, color: lvl.color,
+                  fontSize: 16, pointerEvents: 'none'
                 }}>
                   {lvl.label}
                 </div>
                 <div style={{
-                  fontSize: 12,
-                  color: '#666',
-                  marginTop: 4,
-                  pointerEvents: 'none'
+                  fontSize: 12, color: '#666',
+                  marginTop: 4, pointerEvents: 'none'
                 }}>
                   {lvl.desc}
                 </div>
               </div>
             ))}
           </div>
-          {loading && (
-            <p style={{ color: '#1976D2', marginTop: 12 }}>
-              ⏳ Anonymizing your dataset...
-            </p>
-          )}
         </div>
       )}
 
-      {/* STEP 5 - Share */}
-      {step === 5 && (
-        <div style={{
-          background: '#f3e5f5',
-          padding: 24,
-          borderRadius: 12
-        }}>
+      {/* Step 5 - Share */}
+      {step === 5 && !loading && (
+        <div style={{ background: '#f3e5f5', padding: 24, borderRadius: 12 }}>
           <h3>✅ Dataset Anonymized!</h3>
-          <p>
-            Privacy level applied: <strong>{privacyLevel}</strong>
-          </p>
-          <p>Your secure dataset is ready to share.</p>
+          <p>Privacy level: <strong>{privacyLevel}</strong></p>
+
           <button
             onClick={handleShare}
-            disabled={loading || shareUrl}
-            style={btnStyle('#7B1FA2')}
+            disabled={!!shareUrl}
+            style={btnStyle('#7B1FA2', !!shareUrl)}
           >
-            {loading ? 'Generating...' : 'Generate Share Link'}
+            Generate Share Link
           </button>
 
           {shareUrl && (
@@ -303,14 +323,16 @@ export default function UploadPage() {
               </code>
               <br />
               <button
-                onClick={() => navigator.clipboard.writeText(shareUrl)}
+                onClick={handleCopy}
                 style={{
-                  marginTop: 8,
-                  padding: '6px 12px',
+                  marginTop: 10,
+                  padding: '8px 16px',
                   cursor: 'pointer',
-                  borderRadius: 6,
-                  border: '1px solid #ce93d8',
-                  background: '#fff'
+                  borderRadius: 8,
+                  border: '1.5px solid #ce93d8',
+                  background: '#f3e5f5',
+                  color: '#7B1FA2',
+                  fontWeight: 600
                 }}
               >
                 📋 Copy Link

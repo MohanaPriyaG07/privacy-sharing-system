@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Spinner from '../components/Spinner';
+import { useToast } from '../components/Toast';
 
 const API = 'http://localhost:5000/api';
 const token = () => localStorage.getItem('token');
@@ -7,6 +9,7 @@ const token = () => localStorage.getItem('token');
 export default function DashboardPage() {
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading]   = useState(true);
+  const { showToast, ToastContainer } = useToast();
 
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -21,7 +24,7 @@ export default function DashboardPage() {
       });
       setDatasets(data);
     } catch (err) {
-      console.error(err);
+      showToast('Failed to load datasets', 'error');
     }
     setLoading(false);
   };
@@ -46,6 +49,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
+      <ToastContainer />
 
       {/* Header */}
       <div style={{
@@ -121,9 +125,7 @@ export default function DashboardPage() {
       {/* Dataset list */}
       <h3>Your Datasets</h3>
 
-      {loading && (
-        <p style={{ color: '#666' }}>Loading datasets...</p>
-      )}
+      {loading && <Spinner size={36} text="Loading your datasets..." />}
 
       {!loading && datasets.length === 0 && (
         <div style={{

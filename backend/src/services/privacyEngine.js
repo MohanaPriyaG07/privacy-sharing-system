@@ -11,7 +11,7 @@ export function maskValue(value, fieldName) {
     const [local, domain] = str.split('@');
     return local.slice(0, 2) + '***@' + domain;
   }
-  if (f.includes('phone')) {
+  if (f.includes('phone')) {  
     return str.replace(/\d(?=\d{4})/g, '*');
   }
   if (f.includes('name')) {

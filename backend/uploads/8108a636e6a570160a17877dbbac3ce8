@@ -1,0 +1,26 @@
+EmployeeID,Full Name,Age,Gender,Department,Salary,JoiningDate,Email,Phone,City,Experience
+101,Rahul Sharma,28,Male,IT,55000,2021-03-15,rahul.sharma@gmail.com,9876543210,Chennai,3
+102,PRIYA MENON,35,Female,HR,62000,2019-07-22,priya.menon@gmail.com,8765432109,Mumbai,7
+103,rahul sharma,28,Male,IT,55000,2021-03-15,rahul.sharma@gmail.com,9876543210,Chennai,3
+104,Amit Kumar,,Male,Finance,70000,2018-11-10,amit.kumar@gmail.com,7654321098,Delhi,8
+105,  Sneha Rao  ,27,Female,Marketing,48000,2022-01-05,sneha.rao@gmail.com,6543210987,Bangalore,2
+106,Vikram Singh,45,Male,IT,999999,2015-06-30,vikram.singh@gmail.com,5432109876,Hyderabad,12
+107,Deepa Nair,31,F,HR,58000,2020-09-14,deepa.nair@gmail.com,4321098765,Kochi,5
+108,AMIT KUMAR,38,Male,Finance,70000,2018-11-10,amit.kumar@gmail.com,7654321098,Delhi,8
+109,Ravi Verma,,Male,IT,52000,15-08-2023,ravi.verma@gmail.com,3210987654,Pune,1
+110,Kavya Reddy,29,Female,Marketing,,2021-12-20,kavya.reddy@gmail.com,2109876543,Chennai,3
+111,Suresh Babu,52,Male,HR,-5000,2010-04-18,suresh.babu@gmail.com,1098765432,Coimbatore,15
+112,Anjali Singh,26,Female,Finance,45000,2023-02-28,anjali.singh@gmail.com,9988776655,Jaipur,1
+113,Mohan Das,41,Male,IT,78000,17-05-2016,mohan.das@gmail.com,8877665544,Kolkata,10
+114,,33,Female,Marketing,53000,2020-08-09,,7766554433,Hyderabad,6
+115,Kiran Patel,30,Male,Finance,61000,2021-05-17,kiran.patel@gmail.com,6655443322,Ahmedabad,4
+116,Lakshmi Iyer,44,Female,HR,74000,2014-10-25,lakshmi.iyer@gmail.com,5544332211,Chennai,13
+117,Arjun Mehta,23,Male,IT,38000,2024-01-10,arjun.mehta@gmail.com,4433221100,Mumbai,0
+118,Pooja Sharma,36,Female,Marketing,57000,2019-03-31,pooja.sharma@gmail.com,3322110099,Delhi,7
+119,Suresh Babu,52,Male,HR,-5000,2010-04-18,suresh.babu@gmail.com,1098765432,Coimbatore,15
+120,Naveen Raj,29,M,IT,50000,2022-07-19,naveen.raj@gmail.com,2211009988,Bangalore,2
+121,Divya Krishnan,34,Female,Finance,66000,2018-06-12,divya.krishnan@gmail.com,1100998877,Pune,8
+122,Sanjay Gupta,47,Male,HR,80000,2013-09-05,sanjay.gupta@gmail.com,9900887766,Chennai,14
+123,Meena Pillai,25,Female,Marketing,N/A,2023-08-14,meena.pillai@gmail.com,8800776655,Kochi,1
+124,Rajesh Kumar,39,Male,IT,72000,2016-12-22,rajesh.kumar@gmail.com,7700665544,Delhi,10
+125,Ananya Das,28,Female,Finance,54000,2022-04-30,ananya.das@gmail.com,6600554433,Mumbai,3
